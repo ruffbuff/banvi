@@ -14,19 +14,29 @@
 > Create, modifiy and deploy you own smart contract with BANVI 💥
 
 **BANVI environments:**
-- [Foundary](https://book.getfoundry.sh/)
+- [Foundry](https://book.getfoundry.sh/)
 - [Ethers](https://docs.ethers.org/v5/) {SOON}
 - [Alchemy](https://docs.alchemy.com/reference/api-overview) {SOON}
 
 # BANVI Lib
 ```bash
-src─┳─Standards
-    ┠──ERC20R.sol
-    ┠──ERC721R.sol
-    ┠──ERC1155R.sol
-    ┠─Utility
-    ┠──[SOON]
-    ┖──[SOON]
+╔═src
+╠══Mocks
+╠═══MockERC20.sol
+╠═══[SOON]
+╠══Standards
+╠═══ERC-20R.sol
+╠═══ERC-721R.sol
+╠═══ERC-1155R.sol
+╠══Utility
+╠═══Drop-R.sol
+╚═══[SOON]
+
+╔═test
+╠══ERC-20R.t.sol
+╠══ERC-721R.t.sol
+╠══ERC-1155R.t.sol
+╚══[SOON]
 ```
 
 ## Foundry
