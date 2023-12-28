@@ -16,14 +16,14 @@
 */
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-import "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
-contract SimpleNFTCollection is ERC721 { // Change smart contract name
+import "node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-    address private _owner;
-    uint256 private _tokenIdCounter = 0; // NFT ID counter
-    uint256 public constant SUPPLY = 3000; // Change NFTs total supply
-    uint256 public mintPrice = 0.05 ether; // Change NFTs mint price
+contract SimpleNFTCollection is ERC721Enumerable {
+    address payable private _owner;
+    uint256 private _tokenIdCounter = 0;
+    uint256 public constant SUPPLY = 3000;
+    uint256 public mintPrice = 0.05 ether;
 
     string private _baseTokenURI;
 
@@ -32,12 +32,11 @@ contract SimpleNFTCollection is ERC721 { // Change smart contract name
         _;
     }
 
-    constructor(string memory baseURI) ERC721("SimpleNFTCollection", "SNFT") { // Change SimpleNFTCollection and SNFT
-        _baseTokenURI = baseURI; // Set base NFT URI (metadata)
-        _owner = msg.sender; // Who deploys contract - set's as Owner
+    constructor(string memory baseURI) ERC721("SimpleNFTCollection", "SNFT") {
+        _baseTokenURI = baseURI;
+        _owner = payable(msg.sender);
     }
 
-    // Mint NFT by paying mintPrice
     function mint() public payable {
         require(_tokenIdCounter < SUPPLY, "Max supply reached");
         require(msg.value >= mintPrice, "Not enough Ether sent");
@@ -45,23 +44,23 @@ contract SimpleNFTCollection is ERC721 { // Change smart contract name
         _tokenIdCounter++;
     }
 
-    // Return base URI
     function _baseURI() internal view override returns (string memory) {
         return _baseTokenURI;
     }
 
-    // Only owner can set new base URI
     function setBaseURI(string memory baseURI) external onlyOwner {
         _baseTokenURI = baseURI;
     }
 
-    // Only owner can set new mint price
     function setMintPrice(uint256 newPrice) external onlyOwner {
         mintPrice = newPrice;
     }
 
-    // Only owner can withdraw mint funds from contract
-    function withdraw() external onlyOwner {
-        payable(_owner).transfer(address(this).balance);
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+
+        (bool sent, ) = _owner.call{value: balance}("");
+        require(sent, "Failed to send Ether");
     }
 }

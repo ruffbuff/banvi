@@ -16,7 +16,8 @@
 */
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+
+import "node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract SimpleToken is ERC20 {
     uint256 public constant MINT_RATE = 1000; // Tokens per hour
