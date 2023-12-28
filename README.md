@@ -20,20 +20,22 @@
 - [Alchemy](https://docs.alchemy.com/reference/api-overview) {SOON}
 
 # BANVI Lib
-@ruffbuff:sol-MDAO:
+### @ruffbuff:sol-MDAO:
 ```bash
 ╔═contracts
 ╠══[@solady]-LibString.sol
 ╠══Potion.sol
 ╚══Whale.sol
 ```
-@Hardhat:deploy-scripts:
+
+### @Hardhat:deploy-scripts:
 ```bash
 ╔═scripts
 ╠══deploy.js
 ╚══deploy2.js
 ```
-@ruffbuff:sol-TEMPLATES:
+
+### @ruffbuff:sol-TEMPLATES:
 ```bash
 ╔═src
 ╠══Mocks
@@ -47,7 +49,8 @@
 ╠═══Drop-R.sol
 ╚═══[SOON]
 ```
-@ruffbuff:sol-TEMPLATE-TESTS:
+
+### @ruffbuff:sol-TEMPLATE-TESTS:
 ```bash
 ╔═test
 ╠══ERC-20R.t.sol
