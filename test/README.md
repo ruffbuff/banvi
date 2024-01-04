@@ -1,1 +1,0 @@
-## Smart contract tests using Foundry
