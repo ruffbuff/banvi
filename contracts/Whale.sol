@@ -13,7 +13,6 @@ contract Whale is ERC721Enumerable {
     Potion public potionNFTContract;
 
     uint256 public constant MAX_SUPPLY = 621;
-
     uint256 public mintPrice;
 
     bool public mintActive;
@@ -24,6 +23,7 @@ contract Whale is ERC721Enumerable {
     string private notRevealedURI;
 
     mapping(uint256 => bool) private mutated;
+    mapping(address => uint256) public mintedPerAddress;
 
     constructor(string memory _baseURI, string memory _notRevealedURI) ERC721("Whale", "WHL") {
         owner = msg.sender;
@@ -67,15 +67,23 @@ contract Whale is ERC721Enumerable {
         revealActive = !revealActive;
     }
 
-    function mint(uint256 amount) public payable {
+   function mint(uint256 amount) public payable {
         require(mintActive, "Minting is not active");
         require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds maximum supply");
-        require(msg.sender == owner || msg.value >= mintPrice * amount, "Insufficient funds");
+
+        if (msg.sender != owner) {
+            require(mintedPerAddress[msg.sender] + amount <= 5, "Exceeds allowed mint amount per address");
+            require(msg.value >= mintPrice * amount, "Insufficient funds");
+        }
 
         for (uint256 i = 0; i < amount; i++) {
             uint256 newTokenId = totalSupply() + 1;
             _safeMint(msg.sender, newTokenId);
             emit Minted(msg.sender, newTokenId);
+        }
+
+        if (msg.sender != owner) {
+            mintedPerAddress[msg.sender] += amount;
         }
     }
 
@@ -84,8 +92,8 @@ contract Whale is ERC721Enumerable {
         require(potionNFTContract.ownerOf(potionTokenId) == msg.sender, "Whale: Must own Potion NFT to mutate");
         require(!mutated[whaleTokenId], "Whale: Already mutated");
 
-        mutated[whaleTokenId] = true;
         potionNFTContract.burn(potionTokenId);
+        mutated[whaleTokenId] = true;
         emit Mutated(whaleTokenId, potionTokenId);
     }
 

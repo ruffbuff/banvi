@@ -6,6 +6,8 @@ import "node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enume
 import "./LibString.sol";   // https://github.com/Vectorized/solady/blob/main/src/utils/LibString.sol
 
 contract Potion is ERC721Enumerable {
+    event MintMultiple(address indexed to, uint256 amount);
+
     enum MintStage { CLOSED, STAGE1, STAGE2, OPEN }
     MintStage public currentStage = MintStage.CLOSED;
 
@@ -84,8 +86,10 @@ contract Potion is ERC721Enumerable {
 
     function _mintMultiple(address to, uint256 amount) internal {
         for (uint256 i = 0; i < amount; i++) {
-            _safeMint(to, totalSupply() + 1);
+            uint256 newTokenId = totalSupply() + 1;
+            _safeMint(to, newTokenId + i);
         }
+        emit MintMultiple(to, amount);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
