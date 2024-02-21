@@ -1,11 +1,10 @@
 const hre = require("hardhat");
 
 async function main() {
-    const baseURI = "ipfs://YourBaseURI/";
-    const revealedBaseURI = "ipfs://YourRevealedBaseURI/";
+    const baseURI = "https://bafybeihc64srb3je7y6rougybmkc2uqumc4qmux5b5hfjceex4whgtqrsy.ipfs.nftstorage.link/";
 
     const Potion = await hre.ethers.getContractFactory("Potion");
-    const potion = await Potion.deploy(baseURI, revealedBaseURI);
+    const potion = await Potion.deploy(baseURI);
 
     await potion.deployed();
 

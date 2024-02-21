@@ -10,9 +10,11 @@ contract Whale is ERC721Enumerable {
     event Mutated(uint256 indexed whaleTokenId, uint256 indexed potionTokenId);
 
     address public owner;
+    address public bot;
     Potion public potionNFTContract;
 
     uint256 public constant MAX_SUPPLY = 621;
+    uint256 private maxTokenId;
     uint256 public mintPrice;
 
     bool public mintActive;
@@ -23,10 +25,12 @@ contract Whale is ERC721Enumerable {
     string private notRevealedURI;
 
     mapping(uint256 => bool) private mutated;
+    mapping(uint256 => uint256) public whaleToPotion;
     mapping(address => uint256) public mintedPerAddress;
 
     constructor(string memory _baseURI, string memory _notRevealedURI) ERC721("Whale", "WHL") {
         owner = msg.sender;
+        bot = msg.sender;
         baseURI = _baseURI;
         notRevealedURI = _notRevealedURI;
         mintActive = false;
@@ -35,6 +39,11 @@ contract Whale is ERC721Enumerable {
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
+        _;
+    }
+
+    modifier onlyBot() {
+        require(msg.sender == bot, "Not the bot");
         _;
     }
 
@@ -55,6 +64,10 @@ contract Whale is ERC721Enumerable {
         notRevealedURI = _newNotRevealedURI;
     }
 
+    function setBot(address _newBot) public onlyOwner {
+        bot = _newBot;
+    }
+
     function isMutated(uint256 tokenId) public view returns (bool) {
         return mutated[tokenId];
     }
@@ -67,7 +80,7 @@ contract Whale is ERC721Enumerable {
         revealActive = !revealActive;
     }
 
-   function mint(uint256 amount) public payable {
+    function mint(uint256 amount) public payable {
         require(mintActive, "Minting is not active");
         require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds maximum supply");
 
@@ -77,9 +90,9 @@ contract Whale is ERC721Enumerable {
         }
 
         for (uint256 i = 0; i < amount; i++) {
-            uint256 newTokenId = totalSupply() + 1;
-            _safeMint(msg.sender, newTokenId);
-            emit Minted(msg.sender, newTokenId);
+            maxTokenId++;
+            _safeMint(msg.sender, maxTokenId);
+            emit Minted(msg.sender, maxTokenId);
         }
 
         if (msg.sender != owner) {
@@ -88,12 +101,15 @@ contract Whale is ERC721Enumerable {
     }
 
     function mutateWhale(uint256 whaleTokenId, uint256 potionTokenId) external {
+        require(whaleTokenId > 5, "Whale: Cannot mutate the first 5 NFTs");
         require(ownerOf(whaleTokenId) == msg.sender, "Whale: Must own Whale NFT to mutate");
         require(potionNFTContract.ownerOf(potionTokenId) == msg.sender, "Whale: Must own Potion NFT to mutate");
         require(!mutated[whaleTokenId], "Whale: Already mutated");
 
-        potionNFTContract.burn(potionTokenId);
         mutated[whaleTokenId] = true;
+        whaleToPotion[whaleTokenId] = potionTokenId;
+        potionNFTContract.burn(potionTokenId);
+
         emit Mutated(whaleTokenId, potionTokenId);
     }
 
@@ -105,7 +121,15 @@ contract Whale is ERC721Enumerable {
         } else if (revealActive) {
             return string(abi.encodePacked(baseURI, LibString.toString(tokenId), ".json"));
         } else {
-            return notRevealedURI;
+            return string(abi.encodePacked(notRevealedURI, LibString.toString(tokenId), ".json"));
+        }
+    }
+
+    function changeTokenURI(uint256 tokenId, string memory newBaseURI) public onlyBot {
+        require(ownerOf(tokenId) != address(0), "ERC721Metadata: URI query for nonexistent token");
+
+        if (mutated[tokenId]) {
+            mutatedBaseURI = newBaseURI;
         }
     }
 

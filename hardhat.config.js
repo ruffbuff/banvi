@@ -14,7 +14,7 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      polygonMumbai: '...'
+      polygonMumbai: 'Z75P76EFKJWD27683T4ZGA3Y8DHCXR88UR'
     }
   }
 };

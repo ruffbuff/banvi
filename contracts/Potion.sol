@@ -6,7 +6,7 @@ import "node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enume
 import "./LibString.sol";   // https://github.com/Vectorized/solady/blob/main/src/utils/LibString.sol
 
 contract Potion is ERC721Enumerable {
-    event MintMultiple(address indexed to, uint256 amount);
+    event Mint(address indexed to, uint256 amount);
 
     enum MintStage { CLOSED, STAGE1, STAGE2, OPEN }
     MintStage public currentStage = MintStage.CLOSED;
@@ -14,26 +14,27 @@ contract Potion is ERC721Enumerable {
     address public owner;
     Whale public whaleNFTContract;
 
-    uint256 public constant MAX_SUPPLY = 466;
-
+    uint256 public constant MAX_SUPPLY = 470;
+    uint256 private maxTokenId;
+    
     string private baseURI;
-    string private revealedBaseURI;
-
-    bool public isRevealed = false;
 
     mapping(address => bool) public mystery;
     mapping(address => bool) public whitelist;
     mapping(address => uint256) public mintedAmount;
 
-    constructor(string memory _baseURI, string memory _revealedBaseURI) ERC721("Potion", "POT") {
+    constructor(string memory _baseURI) ERC721("Potion", "POT") {
         owner = msg.sender;
         baseURI = _baseURI;
-        revealedBaseURI = _revealedBaseURI;
     }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
         _;
+    }
+
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
+        baseURI = newBaseURI;
     }
 
     function setWhaleContractAddress(address _whaleAddress) external onlyOwner {
@@ -42,10 +43,6 @@ contract Potion is ERC721Enumerable {
 
     function updateStage(MintStage _stage) external onlyOwner {
         currentStage = _stage;
-    }
-
-    function setReveal(bool _isRevealed) external onlyOwner {
-        isRevealed = _isRevealed;
     }
 
     function addToMystery(address[] calldata addresses) external onlyOwner {
@@ -65,12 +62,20 @@ contract Potion is ERC721Enumerable {
         require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds maximum supply");
 
         if (msg.sender == owner) {
-            _mintMultiple(msg.sender, amount);
+            _mintSave(msg.sender, amount);
         } else {
             require(mintedAmount[msg.sender] + amount <= getMaxMints(msg.sender), "Exceeds allowed mint amount");
             mintedAmount[msg.sender] += amount;
-            _mintMultiple(msg.sender, amount);
+            _mintSave(msg.sender, amount);
         }
+    }
+
+    function _mintSave(address to, uint256 amount) internal {
+        for (uint256 i = 0; i < amount; i++) {
+            maxTokenId++;
+            _safeMint(to, maxTokenId);
+        }
+        emit Mint(to, amount);
     }
 
     function getMaxMints(address minter) internal view returns (uint256) {
@@ -84,25 +89,20 @@ contract Potion is ERC721Enumerable {
         return 0;
     }
 
-    function _mintMultiple(address to, uint256 amount) internal {
-        for (uint256 i = 0; i < amount; i++) {
-            uint256 newTokenId = totalSupply() + 1;
-            _safeMint(to, newTokenId + i);
-        }
-        emit MintMultiple(to, amount);
-    }
-
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(ownerOf(tokenId) != address(0), "ERC721Metadata: URI query for nonexistent token");
-        if (isRevealed) {
-            return string(abi.encodePacked(revealedBaseURI, LibString.toString(tokenId), ".json"));
-        } else {
-            return baseURI;
-        }
+        return string(abi.encodePacked(baseURI, LibString.toString(tokenId), ".json"));
     }
 
     function burn(uint256 tokenId) public {
         require(ownerOf(tokenId) == msg.sender || getApproved(tokenId) == msg.sender, "Potion: caller is not owner nor approved");
         _burn(tokenId);
+    }
+
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+        (bool success, ) = owner.call{value: balance}("");
+        require(success, "Transfer failed");
     }
 }
