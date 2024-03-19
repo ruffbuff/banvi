@@ -37,6 +37,7 @@
 ```bash
 ╔═contracts
 ╠══[@solady]-LibString.sol
+╠══Merge.sol
 ╠══Potion.sol
 ╚══Whale.sol
 ```
